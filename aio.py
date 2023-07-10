@@ -116,6 +116,24 @@ async def process_callback(callback_query: types.CallbackQuery):
         except subprocess.CalledProcessError:
             await bot.send_message(callback_query.from_user.id, 'Invalid input')
 
+@dp.message_handler(IDFilter(user_id), commands=['send'])
+async def send_file(message: types.Message):
+    
+    command_args = message.get_args()
+    if not command_args:
+        await message.reply("Please specify the filename after the /send command.")
+        return
+
+    path, filename = os.path.split(command_args.strip())
+
+    file_path = os.path.join(path, filename)
+    if not os.path.isfile(file_path):
+        await message.reply(f"The file '{filename}' does not exist.")
+        return
+
+    with open(file_path, 'rb') as file:
+        await bot.send_document(message.chat.id, file)
+
 @dp.message_handler(IDFilter(user_id), content_types=['text'])
 async def main(message: types.Message):
     command = message.text
